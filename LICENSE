@@ -1,18 +1,3 @@
-This LICENSE file applies to the Japanese kanji SVG files under `svgsJa/` and
-the corresponding entries in `graphicsJa.txt`, which are derived works of the
-Arphic PL KaitiM GB and Arphic PL KaitiM Big5 fonts (via the animCJK project,
-https://github.com/parsimonhi/animCJK).
-
-These files are redistributed under the Arphic Public License (APL), the full
-text of which follows. Modifications applied by this repository (including
-mechanical stroke extension and, in future, radical replacement) are
-documented in the CREDITS file and in `targets/{kanji}.jsonl`.
-
-The original code in `tools/` is licensed separately under the MIT License.
-See `tools/LICENSE`.
-
-================================================================================
-
 ARPHIC PUBLIC LICENSE
 
 Copyright (C) 1999 Arphic Technology Co., Ltd.
