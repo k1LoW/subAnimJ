@@ -20,7 +20,7 @@ func TestApply_HiStroke3(t *testing.T) {
 		t.Fatalf("unexpected upstream median end %v", origLast)
 	}
 
-	if err := Apply(g, 3, Horizontal); err != nil {
+	if err := Apply(g, 3, Horizontal, BothSides); err != nil {
 		t.Fatalf("apply: %v", err)
 	}
 
@@ -44,7 +44,27 @@ func TestApply_DirectionMismatch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("load: %v", err)
 	}
-	if err := Apply(g, 3, Vertical); err == nil {
+	if err := Apply(g, 3, Vertical, BothSides); err == nil {
 		t.Fatal("expected error for vertical direction on horizontal stroke")
+	}
+}
+
+func TestApply_EndOnly(t *testing.T) {
+	g, err := animcjk.LoadFromUpstream(upstreamRoot, "日")
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	origFirst := g.Strokes[2].Median[0]
+	origLast := g.Strokes[2].Median[len(g.Strokes[2].Median)-1]
+	if err := Apply(g, 3, Horizontal, EndOnly); err != nil {
+		t.Fatalf("apply: %v", err)
+	}
+	first := g.Strokes[2].Median[0]
+	if first != origFirst {
+		t.Fatalf("EndOnly should not move start: %v -> %v", origFirst, first)
+	}
+	last := g.Strokes[2].Median[len(g.Strokes[2].Median)-1]
+	if last == origLast {
+		t.Fatalf("EndOnly should move end")
 	}
 }

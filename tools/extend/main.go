@@ -50,7 +50,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := extend.Apply(g, *stroke, dir); err != nil {
+	if err := extend.Apply(g, *stroke, dir, extend.BothSides); err != nil {
 		log.Fatal(err)
 	}
 	if err := animcjk.WriteSVG(*upstream, *outRoot, g); err != nil {

@@ -24,9 +24,13 @@ func (b bbox) width() float64  { return b.maxX - b.minX }
 func (b bbox) height() float64 { return b.maxY - b.minY }
 
 // Apply replaces glyph strokes [start, start+len(part.Strokes)-1]
-// (1-origin) with the part's strokes, scaled to fit the bounding box of
-// the strokes being replaced. start defaults to 1 if zero is passed.
-func Apply(g *animcjk.Glyph, part *parts.Part, start int) error {
+// (1-origin) with the part's strokes, transformed so the part's
+// fitStroke (1-origin within the part) lines up with the corresponding
+// stroke in the target glyph. The same affine transform is then applied
+// to every other stroke in the part, preserving the part's relative
+// proportions. start defaults to 1; fitStroke <= 0 means use the bbox of
+// the entire part.
+func Apply(g *animcjk.Glyph, part *parts.Part, start, fitStroke int) error {
 	if start <= 0 {
 		start = 1
 	}
@@ -39,15 +43,26 @@ func Apply(g *animcjk.Glyph, part *parts.Part, start int) error {
 		return fmt.Errorf("part %q (%d strokes from %d) extends past glyph stroke count %d", part.Name, n, start, len(g.Strokes))
 	}
 
-	target := strokesBBox(g.Strokes[start-1 : start-1+n])
-	source := strokesBBox(part.Strokes)
-	if source.width() == 0 || source.height() == 0 {
-		return fmt.Errorf("part %q has zero-width or zero-height bounding box", part.Name)
-	}
-	if target.width() == 0 || target.height() == 0 {
-		return fmt.Errorf("target strokes %d..%d have zero-width or zero-height bounding box", start, end)
+	var sourceStrokes, targetStrokes []animcjk.Stroke
+	if fitStroke <= 0 {
+		sourceStrokes = part.Strokes
+		targetStrokes = g.Strokes[start-1 : start-1+n]
+	} else {
+		if fitStroke > n {
+			return fmt.Errorf("fit_stroke %d out of range (1..%d)", fitStroke, n)
+		}
+		sourceStrokes = []animcjk.Stroke{part.Strokes[fitStroke-1]}
+		targetStrokes = []animcjk.Stroke{g.Strokes[start-1+fitStroke-1]}
 	}
 
+	source := strokesBBox(sourceStrokes)
+	target := strokesBBox(targetStrokes)
+	if source.width() == 0 || source.height() == 0 {
+		return fmt.Errorf("part %q fit stroke has zero-width or zero-height bounding box", part.Name)
+	}
+	if target.width() == 0 || target.height() == 0 {
+		return fmt.Errorf("target fit stroke has zero-width or zero-height bounding box")
+	}
 	sx := target.width() / source.width()
 	sy := target.height() / source.height()
 	tx := target.minX - source.minX*sx

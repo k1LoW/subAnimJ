@@ -23,8 +23,10 @@ type Op struct {
 	Op        string `json:"op"`
 	Stroke    int    `json:"stroke,omitempty"`
 	Direction string `json:"direction,omitempty"`
+	Side      string `json:"side,omitempty"`
 	Part      string `json:"part,omitempty"`
 	Start     int    `json:"start,omitempty"`
+	FitStroke int    `json:"fit_stroke,omitempty"`
 }
 
 type runtime struct {
@@ -155,7 +157,11 @@ func (r *runtime) apply(g *animcjk.Glyph, op Op) error {
 		if err != nil {
 			return err
 		}
-		return extend.Apply(g, op.Stroke, dir)
+		side, err := extend.ParseSide(op.Side)
+		if err != nil {
+			return err
+		}
+		return extend.Apply(g, op.Stroke, dir, side)
 	case "compose":
 		if op.Part == "" {
 			return fmt.Errorf("compose: part name is required")
@@ -164,7 +170,7 @@ func (r *runtime) apply(g *animcjk.Glyph, op Op) error {
 		if err != nil {
 			return err
 		}
-		return compose.Apply(g, p, op.Start)
+		return compose.Apply(g, p, op.Start, op.FitStroke)
 	default:
 		return fmt.Errorf("unknown op %q", op.Op)
 	}
