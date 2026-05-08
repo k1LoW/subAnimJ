@@ -5,8 +5,9 @@ Modifications to a small selection of files in
 (`svgsJa/` and `graphicsJa.txt`), tailored for Japanese elementary school
 writing practice.
 
-A live demo of the supported kanji is available at
-**https://k1low.github.io/subAnimJ/**.
+## Demo
+
+- Modified kanji: <https://k1low.github.io/subAnimJ/>
 
 ## Why
 
