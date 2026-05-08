@@ -9,9 +9,8 @@ Upstream
 --------
 
 - animCJK
-  - URL:        https://github.com/parsimonhi/animCJK
-  - Maintainer: FM&SH
-  - Copyright:  2016-2026 FM&SH
+  - URL:       https://github.com/parsimonhi/animCJK
+  - Copyright: 2016-2026 FM&SH (per upstream licenses/COPYING.txt)
 
   animCJK is itself derived from:
 
