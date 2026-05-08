@@ -1,36 +1,48 @@
 # subAnimJ
 
-[animCJK](https://github.com/parsimonhi/animCJK) の日本の漢字データ (`svgsJa/` と `graphicsJa.txt`) を、日本の小学校の書き取り練習向けに改変したサブセットです。
+A subset of [animCJK](https://github.com/parsimonhi/animCJK)'s Japanese kanji
+data (`svgsJa/` and `graphicsJa.txt`), modified for use in Japanese
+elementary school writing practice.
 
-## なぜ作るのか
+A live demo of the supported kanji is available at
+**https://k1low.github.io/subAnimJ/**.
 
-animCJK の漢字 SVG はフォント由来のため、日本の小学校で教える字形と一部異なります。具体的には:
+## Why
 
-1. 「日」の 3 画目や「田」の 4 画目など、デザイン上は他のストロークと接続しない線が、日本の書き取り練習では他線まで届く字形が望まれる。
-2. 「組」の糸偏のように中国字形・中国書き順となっており、日本の書き順 (赤い結び目を最後に書く順序) と一致しないものがある。
+animCJK's kanji SVGs are font-derived, so a few glyph shapes diverge from how
+characters are taught in Japanese elementary schools:
 
-本リポジトリは、上流 animCJK のディレクトリ構成を踏襲しつつ、改変対象漢字の SVG と `graphicsJa.txt` の該当エントリだけを置きます。改変は決定的なツールで再現できるようにし、上流追従を容易にします。
+1. Strokes that, by font design, do not visually meet adjacent strokes (the
+   middle horizontal of `日` / `田`, etc.) are expected to reach those strokes
+   in handwriting practice.
+2. Some radicals, notably the thread radical (糸偏), use a Chinese-style form
+   with a stroke order that differs from what is taught in Japan.
 
-## ディレクトリ構成
+This repository keeps the upstream directory layout but only carries the
+modified SVG files and the corresponding entries in `graphicsJa.txt`.
+Modifications are applied by a deterministic Go tool so the output can be
+regenerated whenever upstream changes.
+
+## Layout
 
 ```
 subAnimJ/
-├── vendor/animCJK/        # 上流 (git submodule, コミットには含めない)
-├── svgsJa/                # 改変済 SVG (該当字のみ, 上流と同じファイル名)
-├── graphicsJa.txt         # 改変済エントリのみの JSONL (上流のサブセット)
-├── parts/                 # 部品 SVG (糸偏など, 後続フェーズ)
-├── tools/                 # 改変を行う Go ツール
-├── targets/               # 改変指示 (1 漢字 1 ファイル)
-├── preview.html           # 改変済 SVG をブラウザで一覧確認するためのページ
+├── vendor/animCJK/        # upstream (git submodule, not committed directly)
+├── svgsJa/                # modified SVG files (one per affected kanji)
+├── graphicsJa.txt         # modified entries only (subset of upstream JSONL)
+├── parts/                 # custom radical SVGs (future phase)
+├── tools/                 # Go tool that performs the modifications
+├── targets/               # modification specs, one JSONL file per kanji
+├── preview.html           # locally generated browser preview
 ├── Makefile
-├── CREDITS                # 上流クレジット・改変点
-├── LICENSE                # svgsJa/ と graphicsJa.txt を覆う APL
-└── tools/LICENSE          # 自前コード (tools/) の MIT
+├── CREDITS                # upstream attribution and modification notes
+├── LICENSE                # APL, covers svgsJa/ and graphicsJa.txt
+└── tools/LICENSE          # MIT, covers the Go code under tools/
 ```
 
-## 使い方
+## Usage
 
-### 初回セットアップ
+### First-time setup
 
 ```sh
 git clone https://github.com/k1LoW/subAnimJ.git
@@ -38,49 +50,67 @@ cd subAnimJ
 git submodule update --init
 ```
 
-### 改変済ファイルの再生成
+### Regenerate the modified files
 
 ```sh
 make build
 ```
 
-`targets/` 配下の `*.jsonl` を全て読み, 上流データから改変済 `svgsJa/*.svg`, `graphicsJa.txt`, および対応漢字を一覧する `preview.html` を再生成します。`preview.html` を任意の HTTP サーバーで開くと書き順アニメを確認できます (例: `python3 -m http.server` で開いて `http://localhost:8000/preview.html`)。
+This reads every `*.jsonl` under `targets/`, applies the operations against
+the upstream data, and writes `svgsJa/*.svg`, the `graphicsJa.txt` subset,
+and `preview.html`. Open `preview.html` through any HTTP server to see the
+stroke-order animations (for example `python3 -m http.server` and visit
+`http://localhost:8000/preview.html`).
 
-### 上流追従
+### Track upstream
 
 ```sh
 make update-vendor
 make build
 ```
 
-## 改変方式
+## Specifying modifications
 
-改変は `targets/{漢字}.jsonl` に **1 漢字 1 ファイル** で宣言します。1 ファイル内には複数の操作を 1 行 1 操作で記述でき, ファイル内の出現順に逐次適用されます。
+Modifications are declared in `targets/{kanji}.jsonl`, **one JSONL file per
+kanji**. A file may contain multiple operations, one per line; operations
+within a file are applied in order so each step sees the cumulative effect of
+the previous ones.
 
-`targets/日.jsonl` の例:
+Example `targets/日.jsonl`:
 
 ```jsonl
 {"op":"extend","stroke":3,"direction":"horizontal"}
 ```
 
-スキーマ:
+Schema:
 
-| フィールド | 必須 | 内容 |
+| field | required | meaning |
 |---|---|---|
-| `op` | yes | 現在は `extend` のみ |
-| `stroke` | extend 時必須 | 1-origin のストローク番号 |
-| `direction` | extend 時必須 | `horizontal` / `vertical` (画の主成分) |
+| `op` | yes | currently only `extend` |
+| `stroke` | for `extend` | 1-origin stroke index (matches upstream order) |
+| `direction` | for `extend` | `horizontal` or `vertical` (the stroke's main axis) |
 
-### 延長 (`extend`) の挙動
+### How `extend` works
 
-1. 対象ストロークの中心線 (median) を取得し、両端のうち他ストロークから遠い方を「自由端」と判定。
-2. 自由端の接線ベクトルを算出 (画の角度を保持)。
-3. 接線方向に伸ばし、他ストロークの中心線と最初に交差する点で停止。
-4. 中心線の自由端と、筆形ポリゴンの自由端寄り頂点を、同一の並進ベクトルで移動。
+For each end (start and end) of the target stroke:
 
-`direction` は接線が指定軸方向に支配的であることのサニティチェックに使われます (例: `horizontal` でほぼ垂直な画を指定するとエラー)。
+1. Compute the tangent at that end from the median centerline so the original
+   stroke angle is preserved.
+2. Skip the end if its tangent does not match the requested `direction`
+   (example: a `horizontal` request will not extend a vertical end).
+3. Cast a ray from the end along the tangent; find the nearest intersection
+   with any other stroke's median.
+4. If the gap to that intersection is more than ~30 units, translate the end
+   by `tangent * gap`. Brush polygon vertices on the same half (closer to that
+   end than to the opposite end) move with it.
 
-## ツール開発
+The 30-unit threshold treats already-overlapping strokes (such as the left
+end of the middle horizontal of `日`, which sits inside the left vertical's
+brush stroke) as already connected and leaves them in place. Strokes with a
+real visible gap (such as both ends of the middle horizontal of `田`) get
+extended on both sides.
+
+## Tool development
 
 ```sh
 cd tools
@@ -88,10 +118,18 @@ go test ./...
 go run ./extend --kanji 日 --stroke 3 --direction horizontal
 ```
 
-## ライセンス・帰属
+## License and attribution
 
-このリポジトリの主たる成果物である `svgsJa/*.svg` と `graphicsJa.txt` は、Arphic PL KaitiM フォントから派生した animCJK を更に派生させたもので、**Arphic Public License (APL)** が継承されます。リポジトリ直下の [`LICENSE`](./LICENSE) が APL 全文を含み、これらのファイルに適用されます。再配布時は APL 本文の同梱と Arphic Technology Co., Ltd. への帰属表示が必要です。
+The primary deliverables of this repository, `svgsJa/*.svg` and
+`graphicsJa.txt`, are derived from animCJK, which itself derives from the
+Arphic PL KaitiM fonts. They inherit the **Arphic Public License (APL)**.
+The repository-root [`LICENSE`](./LICENSE) contains the full APL text and
+applies to those files. When redistributing, include the APL text and
+attribute Arphic Technology Co., Ltd.
 
-一方 `tools/` 以下の自前コードは MIT License です。コードのみを取り出して使う場合は [`tools/LICENSE`](./tools/LICENSE) に従ってください。
+The original Go code under `tools/` is licensed under the MIT License. If you
+extract only the code, follow [`tools/LICENSE`](./tools/LICENSE).
 
-上流追跡や本リポジトリ独自の改変内容は [`CREDITS`](./CREDITS) にまとめています。上流 animCJK の作者 FM&SH 氏に感謝します。
+[`CREDITS`](./CREDITS) lists upstream sources, license details, and the
+modifications applied here. Thanks to the animCJK author FM&SH and the
+Arphic / Make Me a Hanzi communities whose work this builds on.
