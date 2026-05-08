@@ -1,0 +1,64 @@
+subAnimJ CREDITS
+================
+
+subAnimJ is a derivative subset of the animCJK project, modified for use in
+Japanese elementary school writing practice. This file enumerates the
+upstream sources, their licenses, and the modifications applied here.
+
+Upstream
+--------
+
+- animCJK
+  - URL:        https://github.com/parsimonhi/animCJK
+  - Maintainer: FM&SH
+  - Copyright:  2016-2026 FM&SH
+
+  animCJK is itself derived from:
+
+  - Arphic PL KaitiM GB font (font shapes for hanzi/kanji)
+  - Arphic PL KaitiM Big5 font (font shapes for hanzi/kanji)
+  - Makemeahanzi (https://github.com/skishore/makemeahanzi)
+    Contributed the stroke decomposition data format and conversion approach.
+  - Unihan dictionary (http://unicode.org/charts/unihan.html)
+    Used for character decomposition data (not modified by subAnimJ).
+
+Licenses
+--------
+
+The redistributed kanji SVG files (under `svgsJa/`) and the corresponding
+entries in `graphicsJa.txt` are governed by the Arphic Public License.
+See `vendor/animCJK/licenses/APL/` for the full text in multiple languages,
+or refer to:
+
+  https://ftp.gnu.org/non-gnu/chinese-fonts-truetype/LICENSE
+
+Attribution required: derived from Arphic PL KaitiM GB and Arphic PL KaitiM
+Big5 fonts published by Arphic Technology Co., Ltd.
+
+The kanji SVG files and graphicsJa.txt entries are governed by the APL
+(see the top-level `LICENSE`).
+
+The original code under `tools/` is licensed under the MIT License.
+See `tools/LICENSE`.
+
+Modifications applied by subAnimJ
+---------------------------------
+
+For each kanji listed in `targets/`, the corresponding SVG file under
+`svgsJa/` and the entry in `graphicsJa.txt` are modified relative to the
+upstream animCJK release. Modifications include:
+
+1. Stroke extension: certain strokes that, by font design, do not connect
+   to neighboring strokes are extended along their tangent until they meet
+   another stroke. Examples: middle horizontal of "日" (3rd stroke),
+   middle horizontal of "田" (4th stroke).
+
+2. (Planned, not yet implemented) Replacement of the Chinese-style "thread"
+   radical (糸偏) with a Japanese-style equivalent matching the stroke
+   order taught in Japanese elementary schools.
+
+The exact list of changes per kanji is recorded in `targets/{kanji}.jsonl`.
+
+Each modified file therefore differs from the upstream copy. The upstream
+copy is preserved unchanged inside the `vendor/animCJK` git submodule for
+reference and to allow regeneration via `make build`.
