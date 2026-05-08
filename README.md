@@ -1,8 +1,9 @@
 # subAnimJ
 
-A subset of [animCJK](https://github.com/parsimonhi/animCJK)'s Japanese kanji
-data (`svgsJa/` and `graphicsJa.txt`), modified for use in Japanese
-elementary school writing practice.
+Modifications to a small selection of files in
+[animCJK](https://github.com/parsimonhi/animCJK)'s Japanese kanji data
+(`svgsJa/` and `graphicsJa.txt`), tailored for Japanese elementary school
+writing practice.
 
 A live demo of the supported kanji is available at
 **https://k1low.github.io/subAnimJ/**.
