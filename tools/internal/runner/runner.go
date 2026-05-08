@@ -67,26 +67,22 @@ func RunDir(upstreamRoot, outRoot, targetsDir string) error {
 	}
 	sort.Strings(names)
 
-	type built struct {
-		Char     string
-		Filename string
-	}
-	var builts []built
+	var items []previewItem
 	for _, name := range names {
 		path := filepath.Join(targetsDir, name)
 		kanji, codepoint, err := rt.runFile(path)
 		if err != nil {
 			return fmt.Errorf("%s: %w", name, err)
 		}
-		builts = append(builts, built{Char: kanji, Filename: fmt.Sprintf("svgsJa/%d.svg", codepoint)})
+		items = append(items, previewItem{
+			Char:      kanji,
+			Codepoint: codepoint,
+			File:      fmt.Sprintf("svgsJa/%d.svg", codepoint),
+		})
 		fmt.Fprintf(os.Stderr, "built: %s\n", name)
 	}
 
-	pairs := make([][2]string, len(builts))
-	for i, b := range builts {
-		pairs[i] = [2]string{b.Char, b.Filename}
-	}
-	if err := writePreview(outRoot, pairs); err != nil {
+	if err := writePreview(outRoot, items); err != nil {
 		return fmt.Errorf("write preview.html: %w", err)
 	}
 	return nil

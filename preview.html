@@ -1,84 +1,129 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>subAnimJ Preview</title>
+<title>subAnimJ demo</title>
 <style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: sans-serif;
-  max-width: 1200px;
+  padding: 2rem;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 20px;
+  background: #fafafa;
+  color: #222;
 }
-h1 { text-align: center; }
-.container {
+h1 { margin-bottom: 0.5rem; }
+p.desc {
+  color: #666;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+p.desc a { color: #0366d6; }
+.controls { margin-bottom: 1rem; }
+button {
+  padding: 6px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+}
+button:hover { background: #f0f0f0; }
+.grid {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
+  gap: 12px;
 }
-.kanji {
-  text-align: center;
+.cell { text-align: center; }
+.cell .label {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 4px;
 }
-.kanji h2 {
-  margin: 0 0 4px 0;
-  font-size: 1.2em;
+.cell .meta {
+  font-size: 0.75rem;
+  color: #888;
+  margin-bottom: 4px;
+  font-family: monospace;
 }
-.kanji object {
+.cell .svg-container {
   width: 200px;
   height: 200px;
-  border: 1px solid #eee;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 4px;
+  overflow: hidden;
 }
-button {
+.cell .svg-container object {
+  width: 100%;
+  height: 100%;
   display: block;
-  margin: 20px auto;
-  padding: 8px 24px;
-  font-size: 1em;
-  cursor: pointer;
 }
 </style>
 </head>
 <body>
-<h1>subAnimJ Preview</h1>
-<button onclick="replay()">Replay</button>
-<div class="container" id="container"></div>
+<h1>subAnimJ demo</h1>
+<p class="desc">
+  Animated stroke-order SVGs of Japanese kanji modified for elementary
+  school writing practice, derived from
+  <a href="https://github.com/parsimonhi/animCJK">animCJK</a>
+  (Arphic PL KaitiM via
+  <a href="https://github.com/skishore/makemeahanzi">Make Me a Hanzi</a>).
+  Inherits the
+  <a href="https://ftp.gnu.org/non-gnu/chinese-fonts-truetype/LICENSE">Arphic Public License</a>.
+  <a href="https://github.com/k1LoW/subAnimJ">GitHub</a>
+</p>
+<div class="controls">
+  <button id="replay-btn">Replay</button>
+</div>
+<div class="grid" id="grid"></div>
 <script>
 const items = [
-  { char: "日", file: "svgsJa/26085.svg" },
-  { char: "早", file: "svgsJa/26089.svg" },
-  { char: "月", file: "svgsJa/26376.svg" },
-  { char: "田", file: "svgsJa/30000.svg" },
-  { char: "町", file: "svgsJa/30010.svg" },
-  { char: "白", file: "svgsJa/30333.svg" },
-  { char: "百", file: "svgsJa/30334.svg" },
-  { char: "目", file: "svgsJa/30446.svg" },
-  { char: "組", file: "svgsJa/32068.svg" },
-  { char: "耳", file: "svgsJa/32819.svg" },
-  { char: "草", file: "svgsJa/33609.svg" },
-  { char: "見", file: "svgsJa/35211.svg" },
-  { char: "貝", file: "svgsJa/35997.svg" },
-  { char: "車", file: "svgsJa/36554.svg" },
-  { char: "青", file: "svgsJa/38738.svg" },
+  { char: "日", codepoint:  26085 , file: "svgsJa/26085.svg" },
+  { char: "早", codepoint:  26089 , file: "svgsJa/26089.svg" },
+  { char: "月", codepoint:  26376 , file: "svgsJa/26376.svg" },
+  { char: "田", codepoint:  30000 , file: "svgsJa/30000.svg" },
+  { char: "町", codepoint:  30010 , file: "svgsJa/30010.svg" },
+  { char: "白", codepoint:  30333 , file: "svgsJa/30333.svg" },
+  { char: "百", codepoint:  30334 , file: "svgsJa/30334.svg" },
+  { char: "目", codepoint:  30446 , file: "svgsJa/30446.svg" },
+  { char: "組", codepoint:  32068 , file: "svgsJa/32068.svg" },
+  { char: "耳", codepoint:  32819 , file: "svgsJa/32819.svg" },
+  { char: "草", codepoint:  33609 , file: "svgsJa/33609.svg" },
+  { char: "見", codepoint:  35211 , file: "svgsJa/35211.svg" },
+  { char: "貝", codepoint:  35997 , file: "svgsJa/35997.svg" },
+  { char: "車", codepoint:  36554 , file: "svgsJa/36554.svg" },
+  { char: "青", codepoint:  38738 , file: "svgsJa/38738.svg" },
 ];
-const container = document.getElementById('container');
-function loadAll() {
-  container.innerHTML = '';
-  items.forEach(it => {
-    const div = document.createElement('div');
-    div.className = 'kanji';
-    const h2 = document.createElement('h2');
-    h2.textContent = it.char;
-    div.appendChild(h2);
+const grid = document.getElementById('grid');
+function render() {
+  grid.innerHTML = '';
+  for (const it of items) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = it.char;
+    cell.appendChild(label);
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = 'U+' + it.codepoint.toString(16).toUpperCase().padStart(4, '0');
+    cell.appendChild(meta);
+    const box = document.createElement('div');
+    box.className = 'svg-container';
     const obj = document.createElement('object');
     obj.type = 'image/svg+xml';
     obj.data = it.file + '?t=' + Date.now();
-    div.appendChild(obj);
-    container.appendChild(div);
-  });
+    box.appendChild(obj);
+    cell.appendChild(box);
+    grid.appendChild(cell);
+  }
 }
-function replay() { loadAll(); }
-loadAll();
+document.getElementById('replay-btn').addEventListener('click', render);
+render();
 </script>
 </body>
 </html>

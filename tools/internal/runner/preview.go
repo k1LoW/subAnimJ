@@ -8,92 +8,134 @@ import (
 )
 
 const previewTmpl = `<!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>subAnimJ Preview</title>
+<title>subAnimJ demo</title>
 <style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: sans-serif;
-  max-width: 1200px;
+  padding: 2rem;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 20px;
+  background: #fafafa;
+  color: #222;
 }
-h1 { text-align: center; }
-.container {
+h1 { margin-bottom: 0.5rem; }
+p.desc {
+  color: #666;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+p.desc a { color: #0366d6; }
+.controls { margin-bottom: 1rem; }
+button {
+  padding: 6px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+}
+button:hover { background: #f0f0f0; }
+.grid {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
+  gap: 12px;
 }
-.kanji {
-  text-align: center;
+.cell { text-align: center; }
+.cell .label {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 4px;
 }
-.kanji h2 {
-  margin: 0 0 4px 0;
-  font-size: 1.2em;
+.cell .meta {
+  font-size: 0.75rem;
+  color: #888;
+  margin-bottom: 4px;
+  font-family: monospace;
 }
-.kanji object {
+.cell .svg-container {
   width: 200px;
   height: 200px;
-  border: 1px solid #eee;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 4px;
+  overflow: hidden;
 }
-button {
+.cell .svg-container object {
+  width: 100%;
+  height: 100%;
   display: block;
-  margin: 20px auto;
-  padding: 8px 24px;
-  font-size: 1em;
-  cursor: pointer;
 }
 </style>
 </head>
 <body>
-<h1>subAnimJ Preview</h1>
-<button onclick="replay()">Replay</button>
-<div class="container" id="container"></div>
+<h1>subAnimJ demo</h1>
+<p class="desc">
+  Animated stroke-order SVGs of Japanese kanji modified for elementary
+  school writing practice, derived from
+  <a href="https://github.com/parsimonhi/animCJK">animCJK</a>
+  (Arphic PL KaitiM via
+  <a href="https://github.com/skishore/makemeahanzi">Make Me a Hanzi</a>).
+  Inherits the
+  <a href="https://ftp.gnu.org/non-gnu/chinese-fonts-truetype/LICENSE">Arphic Public License</a>.
+  <a href="https://github.com/k1LoW/subAnimJ">GitHub</a>
+</p>
+<div class="controls">
+  <button id="replay-btn">Replay</button>
+</div>
+<div class="grid" id="grid"></div>
 <script>
 const items = [
 {{- range . }}
-  { char: {{ .Char }}, file: {{ .File }} },
+  { char: {{ .Char }}, codepoint: {{ .Codepoint }}, file: {{ .File }} },
 {{- end }}
 ];
-const container = document.getElementById('container');
-function loadAll() {
-  container.innerHTML = '';
-  items.forEach(it => {
-    const div = document.createElement('div');
-    div.className = 'kanji';
-    const h2 = document.createElement('h2');
-    h2.textContent = it.char;
-    div.appendChild(h2);
+const grid = document.getElementById('grid');
+function render() {
+  grid.innerHTML = '';
+  for (const it of items) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = it.char;
+    cell.appendChild(label);
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = 'U+' + it.codepoint.toString(16).toUpperCase().padStart(4, '0');
+    cell.appendChild(meta);
+    const box = document.createElement('div');
+    box.className = 'svg-container';
     const obj = document.createElement('object');
     obj.type = 'image/svg+xml';
     obj.data = it.file + '?t=' + Date.now();
-    div.appendChild(obj);
-    container.appendChild(div);
-  });
+    box.appendChild(obj);
+    cell.appendChild(box);
+    grid.appendChild(cell);
+  }
 }
-function replay() { loadAll(); }
-loadAll();
+document.getElementById('replay-btn').addEventListener('click', render);
+render();
 </script>
 </body>
 </html>
 `
 
 type previewItem struct {
-	Char string
-	File string
+	Char      string
+	Codepoint int
+	File      string
 }
 
-func writePreview(outRoot string, pairs [][2]string) error {
+func writePreview(outRoot string, items []previewItem) error {
 	tmpl, err := template.New("preview").Parse(previewTmpl)
 	if err != nil {
 		return err
-	}
-	items := make([]previewItem, len(pairs))
-	for i, p := range pairs {
-		items[i] = previewItem{Char: p[0], File: p[1]}
 	}
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, items); err != nil {
