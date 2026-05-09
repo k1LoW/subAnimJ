@@ -83,13 +83,19 @@ func Apply(g *animcjk.Glyph, strokeNum int, dir Direction, side Side) error {
 	startAllowed := side == BothSides || side == StartOnly
 	endAllowed := side == BothSides || side == EndOnly
 
+	// When a side is explicitly requested, the user has already decided that
+	// end needs extending; bypass the brush-gap threshold so a marginally
+	// short end still extends. With BothSides the threshold filters out ends
+	// that already overlap a neighbour and don't need to move.
+	skipThreshold := side != BothSides
+
 	var startDelta, endDelta svgpath.Point
 	var startOK, endOK bool
 	if startAllowed {
-		startDelta, startOK = tryExtendEnd(g, idx, startPt, startTangent, dir)
+		startDelta, startOK = tryExtendEnd(g, idx, startPt, startTangent, dir, skipThreshold)
 	}
 	if endAllowed {
-		endDelta, endOK = tryExtendEnd(g, idx, endPt, endTangent, dir)
+		endDelta, endOK = tryExtendEnd(g, idx, endPt, endTangent, dir, skipThreshold)
 	}
 
 	if !startOK && !endOK {
@@ -107,7 +113,7 @@ func Apply(g *animcjk.Glyph, strokeNum int, dir Direction, side Side) error {
 	return nil
 }
 
-func tryExtendEnd(g *animcjk.Glyph, idx int, p, tangent svgpath.Point, dir Direction) (svgpath.Point, bool) {
+func tryExtendEnd(g *animcjk.Glyph, idx int, p, tangent svgpath.Point, dir Direction, skipThreshold bool) (svgpath.Point, bool) {
 	if !directionMatches(tangent, dir) {
 		return svgpath.Point{}, false
 	}
@@ -115,7 +121,7 @@ func tryExtendEnd(g *animcjk.Glyph, idx int, p, tangent svgpath.Point, dir Direc
 	if !ok {
 		return svgpath.Point{}, false
 	}
-	if d <= minExtensionGap {
+	if !skipThreshold && d <= minExtensionGap {
 		return svgpath.Point{}, false
 	}
 	return svgpath.Point{X: tangent.X * d, Y: tangent.Y * d}, true
