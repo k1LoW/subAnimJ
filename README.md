@@ -17,8 +17,9 @@ characters are taught in Japanese elementary schools:
 1. Strokes that, by font design, do not visually meet adjacent strokes (the
    middle horizontal of `日` / `田`, etc.) are expected to reach those strokes
    in handwriting practice.
-2. Some radicals, notably the thread radical (糸偏), use a Chinese-style form
-   with a stroke order that differs from what is taught in Japan.
+2. Some radicals — notably the thread radical (糸偏) and the bamboo radical
+   (竹冠) — use a Chinese-style form with stroke shape and stroke order that
+   differ from what is taught in Japan.
 
 This repository keeps the upstream directory layout but only carries the
 modified SVG files and the corresponding entries in `graphicsJa.txt`.
@@ -32,7 +33,7 @@ subAnimJ/
 ├── vendor/animCJK/        # upstream (git submodule, not committed directly)
 ├── svgsJa/                # modified SVG files (one per affected kanji)
 ├── graphicsJa.txt         # modified entries only (subset of upstream JSONL)
-├── parts/                 # custom radical SVGs (future phase)
+├── parts/                 # hand-authored Japanese-style radical SVGs (糸, 竹, ...)
 ├── tools/                 # Go tool that performs the modifications
 ├── targets/               # modification specs, one JSONL file per kanji
 ├── preview.html           # locally generated browser preview
@@ -84,13 +85,25 @@ Example `targets/日.jsonl`:
 {"op":"extend","stroke":3,"direction":"horizontal"}
 ```
 
+Example `targets/組.jsonl` (compose then extend):
+
+```jsonl
+{"op":"compose","part":"糸","fit_stroke":1}
+{"op":"extend","stroke":9,"direction":"horizontal"}
+{"op":"extend","stroke":10,"direction":"horizontal"}
+```
+
 Schema:
 
-| field | required | meaning |
+| field | applies to | meaning |
 |---|---|---|
-| `op` | yes | currently only `extend` |
-| `stroke` | for `extend` | 1-origin stroke index (matches upstream order) |
-| `direction` | for `extend` | `horizontal` or `vertical` (the stroke's main axis) |
+| `op` | all | `extend` or `compose` |
+| `stroke` | `extend` | 1-origin stroke index in upstream order |
+| `direction` | `extend` | `horizontal` or `vertical` (sanity check; at least one end's tangent must match) |
+| `side` | `extend` | `start`, `end`, or `both` (default `both`); explicit sides bypass the brush-gap threshold |
+| `part` | `compose` | name under `parts/` (without the `.svg` extension) |
+| `start` | `compose` | first upstream stroke to replace (1-origin, default 1) |
+| `fit_stroke` | `compose` | 1-origin part-stroke index whose bbox is matched against the corresponding upstream stroke; the resulting affine transform applies to every part stroke |
 
 ### How `extend` works
 
@@ -98,19 +111,42 @@ For each end (start and end) of the target stroke:
 
 1. Compute the tangent at that end from the median centerline so the original
    stroke angle is preserved.
-2. Skip the end if its tangent does not match the requested `direction`
-   (example: a `horizontal` request will not extend a vertical end).
-3. Cast a ray from the end along the tangent; find the nearest intersection
+2. Cast a ray from the end along the tangent; find the nearest intersection
    with any other stroke's median.
-4. If the gap to that intersection is more than ~30 units, translate the end
+3. If the gap to that intersection is more than ~30 units, translate the end
    by `tangent * gap`. Brush polygon vertices on the same half (closer to that
-   end than to the opposite end) move with it.
+   end than to the opposite end) move with it. When `side` is `start` or
+   `end`, the threshold is bypassed so a marginally short end still extends.
 
 The 30-unit threshold treats already-overlapping strokes (such as the left
 end of the middle horizontal of `日`, which sits inside the left vertical's
 brush stroke) as already connected and leaves them in place. Strokes with a
 real visible gap (such as both ends of the middle horizontal of `田`) get
-extended on both sides.
+extended on both sides automatically.
+
+### How `compose` works
+
+`compose` replaces a contiguous run of strokes — typically a radical — with
+a hand-authored part SVG from `parts/`. Each part SVG follows the same
+structure as a normal animCJK glyph (one `<path id="dN">` per stroke plus
+the clipped median path) but is drawn in Japanese style.
+
+1. Load `parts/{part}.svg` and read its N strokes (brush polygon plus
+   median polyline).
+2. Compute the bounding box of the part's `fit_stroke` (default the whole
+   part if zero/omitted) and the corresponding upstream stroke at
+   `start + fit_stroke - 1`.
+3. Derive an affine transform (independent x/y scale plus translate) that
+   maps the source bbox onto the target bbox.
+4. Apply the transform to every stroke in the part and overwrite the
+   upstream's strokes `[start, start+N-1]` with the result. The total
+   stroke count is preserved, so later strokes' indices (e.g. the 且 part
+   in `組`) keep their original numbering.
+
+Using `fit_stroke=1` is the recommended default for radicals like 糸 and 竹
+where the first stroke is positionally consistent between the Chinese and
+Japanese forms; this keeps the radical's internal proportions constant
+while still anchoring it to the upstream's layout.
 
 ## Tool development
 
