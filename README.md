@@ -104,6 +104,7 @@ Schema:
 | `part` | `compose` | name under `parts/` (without the `.svg` extension) |
 | `start` | `compose` | first upstream stroke to replace (1-origin, default 1) |
 | `fit_stroke` | `compose` | 1-origin part-stroke index whose bbox is matched against the corresponding upstream stroke; the resulting affine transform applies to every part stroke |
+| `offset` | `compose` | `[dx, dy]` applied after the fit transform for fine-tuning placement; `-x` is left, `+y` is up (graphicsJa y-up). Example: `"offset":[-30,0]` shifts the composed radical 30 units left |
 
 ### How `extend` works
 
@@ -139,14 +140,19 @@ the clipped median path) but is drawn in Japanese style.
 3. Derive an affine transform (independent x/y scale plus translate) that
    maps the source bbox onto the target bbox.
 4. Apply the transform to every stroke in the part and overwrite the
-   upstream's strokes `[start, start+N-1]` with the result. The total
-   stroke count is preserved, so later strokes' indices (e.g. the 且 part
-   in `組`) keep their original numbering.
+   upstream's strokes `[start, start+N-1]` with the result. If `offset`
+   is given, every transformed point is also translated by `[dx, dy]`
+   for fine-tuning placement. The total stroke count is preserved, so
+   later strokes' indices (e.g. the 且 part in `組`) keep their original
+   numbering.
 
 Using `fit_stroke=1` is the recommended default for radicals like 糸 and 竹
 where the first stroke is positionally consistent between the Chinese and
 Japanese forms; this keeps the radical's internal proportions constant
-while still anchoring it to the upstream's layout.
+while still anchoring it to the upstream's layout. Use `offset` when the
+fit-derived position needs a small nudge (for example, `筆`'s 竹冠 sits
+a little far right when fitted naturally, so `"offset":[-30,0]` brings it
+back).
 
 ## Tool development
 

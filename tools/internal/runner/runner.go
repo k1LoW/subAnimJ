@@ -20,13 +20,14 @@ import (
 )
 
 type Op struct {
-	Op        string `json:"op"`
-	Stroke    int    `json:"stroke,omitempty"`
-	Direction string `json:"direction,omitempty"`
-	Side      string `json:"side,omitempty"`
-	Part      string `json:"part,omitempty"`
-	Start     int    `json:"start,omitempty"`
-	FitStroke int    `json:"fit_stroke,omitempty"`
+	Op        string    `json:"op"`
+	Stroke    int       `json:"stroke,omitempty"`
+	Direction string    `json:"direction,omitempty"`
+	Side      string    `json:"side,omitempty"`
+	Part      string    `json:"part,omitempty"`
+	Start     int       `json:"start,omitempty"`
+	FitStroke int       `json:"fit_stroke,omitempty"`
+	Offset    []float64 `json:"offset,omitempty"`
 }
 
 type runtime struct {
@@ -170,7 +171,14 @@ func (r *runtime) apply(g *animcjk.Glyph, op Op) error {
 		if err != nil {
 			return err
 		}
-		return compose.Apply(g, p, op.Start, op.FitStroke)
+		var ox, oy float64
+		if len(op.Offset) >= 2 {
+			ox = op.Offset[0]
+			oy = op.Offset[1]
+		} else if len(op.Offset) == 1 {
+			ox = op.Offset[0]
+		}
+		return compose.Apply(g, p, op.Start, op.FitStroke, ox, oy)
 	default:
 		return fmt.Errorf("unknown op %q", op.Op)
 	}

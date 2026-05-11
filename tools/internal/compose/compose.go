@@ -29,8 +29,11 @@ func (b bbox) height() float64 { return b.maxY - b.minY }
 // stroke in the target glyph. The same affine transform is then applied
 // to every other stroke in the part, preserving the part's relative
 // proportions. start defaults to 1; fitStroke <= 0 means use the bbox of
-// the entire part.
-func Apply(g *animcjk.Glyph, part *parts.Part, start, fitStroke int) error {
+// the entire part. offsetX/offsetY (in graphicsJa y-up coordinates,
+// -x = left, +y = up) are applied to every transformed point after the
+// fit transform, providing a knob for fine-tuning placement when the
+// fit-derived position is slightly off.
+func Apply(g *animcjk.Glyph, part *parts.Part, start, fitStroke int, offsetX, offsetY float64) error {
 	if start <= 0 {
 		start = 1
 	}
@@ -68,7 +71,7 @@ func Apply(g *animcjk.Glyph, part *parts.Part, start, fitStroke int) error {
 	tx := target.minX - source.minX*sx
 	ty := target.minY - source.minY*sy
 	xform := func(p svgpath.Point) svgpath.Point {
-		return svgpath.Point{X: p.X*sx + tx, Y: p.Y*sy + ty}
+		return svgpath.Point{X: p.X*sx + tx + offsetX, Y: p.Y*sy + ty + offsetY}
 	}
 
 	for i, ps := range part.Strokes {
