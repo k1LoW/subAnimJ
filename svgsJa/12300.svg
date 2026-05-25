@@ -1,0 +1,37 @@
+<!--
+subAnimJ
+Derived from:
+    Klee One - https://github.com/fontworks-fonts/Klee
+    Copyright 2020 The Klee Project Authors
+You can redistribute and/or modify this file under the terms of the SIL Open Font License, Version 1.1
+as published by SIL International.
+You should have received a copy of this license along with this file.
+If not, see https://openfontlicense.org/.
+-->
+<svg id="z12300" class="acjk" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+<style>
+<![CDATA[
+@keyframes zk {
+	to {
+		stroke-dashoffset:0;
+	}
+}
+svg.acjk path[clip-path] {
+	--t:0.8s;
+	animation:zk var(--t) linear forwards var(--d);
+	stroke-dasharray:3337;
+	stroke-dashoffset:3339;
+	stroke-width:128;
+	stroke-linecap:round;
+	fill:none;
+	stroke:#000;
+}
+svg.acjk path[id] {fill:#ccc;}
+]]>
+</style>
+<path id="z12300d1" d="M749 165L749 646C749 664 748 681 748 699C747 716 746 729 746 737C746 746 751 753 761 758C770 763 780 766 788 766C799 766 804 762 804 756C804 744 803 728 802 709C801 689 801 668 801 647L801 127L863 127C880 127 897 127 914 128C931 129 944 130 952 130C961 130 966 124 966 114C966 106 963 98 958 90C953 81 946 77 938 77L937 77C932 77 923 78 910 78C897 79 883 79 867 79C851 79 835 79 821 79C806 79 794 79 785 79C768 79 757 81 752 85C746 89 743 96 743 105C743 112 744 121 746 130C748 140 749 152 749 165Z"/>
+<defs>
+	<clipPath id="z12300c1"><use href="#z12300d1"/></clipPath>
+</defs>
+<path style="--d:1s;" pathLength="3333" clip-path="url(#z12300c1)" d="M942 103L778 103L778 736"/>
+</svg>

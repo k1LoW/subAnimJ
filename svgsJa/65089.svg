@@ -1,0 +1,37 @@
+<!--
+subAnimJ
+Derived from:
+    Klee One - https://github.com/fontworks-fonts/Klee
+    Copyright 2020 The Klee Project Authors
+You can redistribute and/or modify this file under the terms of the SIL Open Font License, Version 1.1
+as published by SIL International.
+You should have received a copy of this license along with this file.
+If not, see https://openfontlicense.org/.
+-->
+<svg id="z65089" class="acjk" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+<style>
+<![CDATA[
+@keyframes zk {
+	to {
+		stroke-dashoffset:0;
+	}
+}
+svg.acjk path[clip-path] {
+	--t:0.8s;
+	animation:zk var(--t) linear forwards var(--d);
+	stroke-dasharray:3337;
+	stroke-dashoffset:3339;
+	stroke-width:128;
+	stroke-linecap:round;
+	fill:none;
+	stroke:#000;
+}
+svg.acjk path[id] {fill:#ccc;}
+]]>
+</style>
+<path id="z65089d1" d="M956 858L956 846C956 833 957 821 959 811C961 802 962 793 962 786C962 777 959 771 954 766C949 762 937 760 920 760L372 760C357 760 340 759 323 759C305 758 291 757 283 757C274 757 269 762 269 773C269 781 272 790 277 799C282 807 289 812 297 812L298 812C308 811 319 811 332 810C345 810 358 810 371 810L907 810L907 857C907 876 907 894 906 911C906 927 905 940 905 948C905 957 910 964 919 969C928 974 937 977 944 977C954 977 959 973 959 967C959 955 959 939 958 919C957 899 956 878 956 858Z"/>
+<defs>
+	<clipPath id="z65089c1"><use href="#z65089d1"/></clipPath>
+</defs>
+<path style="--d:1s;" pathLength="3333" clip-path="url(#z65089c1)" d="M317 787L932 787L932 951"/>
+</svg>

@@ -1,3 +1,6 @@
 [submodule "vendor/animCJK"]
 	path = vendor/animCJK
 	url = https://github.com/parsimonhi/animCJK.git
+[submodule "vendor/Klee"]
+	path = vendor/Klee
+	url = https://github.com/fontworks-fonts/Klee.git
